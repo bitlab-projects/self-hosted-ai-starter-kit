@@ -1,0 +1,314 @@
+{
+  "name": "Pdf2Img",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Set File ID').item.json.file_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "id": "15918081-13cc-48cb-8afd-b771458d005f",
+      "name": "Download File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        800,
+        960
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Ia4TgnPHadqDwems",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1linEAYdLPrQT1hUBlKMVP4gRXiyv_Fxd",
+          "mode": "list",
+          "cachedResultName": "Docs",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1linEAYdLPrQT1hUBlKMVP4gRXiyv_Fxd"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "id": "49b45a96-fc04-4537-a01f-8616dcc24b25",
+      "name": "File Created",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        400,
+        960
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Ia4TgnPHadqDwems",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "10646eae-ae46-4327-a4dc-9987c2d76173",
+              "name": "file_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f4536df5-d0b1-4392-bf17-b8137fb31a44",
+              "name": "file_type",
+              "value": "={{ $json.mimeType }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0f1da26b-d4c5-44ea-b08d-5e9e4b254761",
+      "name": "Set File ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        600,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Set File ID').item.json.file_type }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a4271b74-b111-4c70-a580-d8ba73562936"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "357adeb0-2909-45a7-97ad-beecc0346fbc",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1000,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/api/v1/convert/pdf/img",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "imageFormat",
+              "value": "png"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "fileInput",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "singleOrMultiple",
+              "value": "multiple"
+            },
+            {
+              "name": "colorType",
+              "value": "color"
+            },
+            {
+              "name": "dpi",
+              "value": "72"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        960
+      ],
+      "id": "e2ebb626-911e-4aca-9f27-bea45ac4609f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "outputPrefix": "data_"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        740
+      ],
+      "id": "c2c05c7c-4ccb-43a1-b382-64d35717c0d2",
+      "name": "Compression"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1qJ-w8sO0lK_Y0yTkf-XmJHWfA1IQMDMC",
+          "mode": "list",
+          "cachedResultName": "Images",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1qJ-w8sO0lK_Y0yTkf-XmJHWfA1IQMDMC"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1400,
+        960
+      ],
+      "id": "2e0cf523-0c0b-4ee5-9398-ff4d0b97559c",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Ia4TgnPHadqDwems",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Created": {
+      "main": [
+        [
+          {
+            "node": "Set File ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set File ID": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        []
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ab379606-af27-4250-9703-ded811f6cd9c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "H2I5SVrgrLZ1c8kM",
+  "tags": []
+}
